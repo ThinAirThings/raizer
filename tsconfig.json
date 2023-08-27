@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "module": "ESNext",
+        "target": "es2022",
+        "outDir": "jsbin",
+        "rootDir": "src",
+        "moduleResolution": "node",
+        "strict": true,
+        "esModuleInterop": true,
+        "typeRoots": ["node_modules/@types", "typings",],
+        "noImplicitAny": false,
+        "noImplicitThis": true,
+        "jsx": "react-jsx",
+    },
+    "include": [
+        "src/**/*.ts", "src/**/*.tsx", "framework/**/*.ts", "framework/**/*.tsx"],
+    "exclude": ["node_modules"]
+}

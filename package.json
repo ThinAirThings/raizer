@@ -1,0 +1,56 @@
+{
+    "name": "flywheel",
+    "version": "1.0.0",
+    "description": "ai component flywheel",
+    "type": "module",
+    "bin": {
+        "flywheel": "bin/main.js"
+    },
+    "scripts": {
+        "prod": "rollup -c && node bin/main.js",
+        "build-types": "dts-bundle-generator -o bin/ai-interface.d.ts src/ai-interface.d.ts",
+        "build": "rollup -c",
+        "dev": "nodemon --watch src --ext ts,tsx --exec 'rollup -c && node bin/main.js'"
+    },
+    "files": [
+        "bin"
+    ],
+    "dependencies": {
+        "@aws-sdk/client-secrets-manager": "^3.398.0",
+        "@liveblocks/client": "^1.0.9",
+        "@liveblocks/node": "^1.0.9",
+        "@liveblocks/react": "^1.1.0",
+        "@thinairthings/react-nodegraph": "^1.0.5",
+        "@thinairthings/websocket-client": "^1.0.19",
+        "@thinairthings/websocket-server": "^1.0.63",
+        "chalk": "^4.1.2",
+        "dotenv": "^16.3.1",
+        "lodash.isequal": "^4.5.0",
+        "node-fetch": "^3.3.1",
+        "openai": "^3.3.0",
+        "prettier": "^3.0.2",
+        "react": "^18.2.0",
+        "react-nil": "^1.2.0",
+        "rxjs": "^7.8.1",
+        "socket.io": "^4.6.1",
+        "typescript-json-schema": "^0.60.0",
+        "use-immer": "^0.9.0",
+        "ws": "^8.13.0"
+    },
+    "devDependencies": {
+        "@rollup/plugin-typescript": "^11.1.2",
+        "@types/jsdom": "^21.1.1",
+        "@types/lodash.isequal": "^4.5.6",
+        "@types/node": "^18.15.11",
+        "@types/react": "^18.2.14",
+        "@types/react-dom": "^18.2.6",
+        "@types/ws": "^8.5.4",
+        "@typescript-eslint/typescript-estree": "^6.4.1",
+        "dts-bundle-generator": "^8.0.1",
+        "nodemon": "^2.0.22",
+        "rollup-plugin-dts": "^6.0.0",
+        "ts-node": "^10.9.1",
+        "tslib": "^2.5.0",
+        "typescript": "^5.2.2"
+    }
+}
