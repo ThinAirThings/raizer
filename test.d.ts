@@ -4,6 +4,10 @@ export type ThoughtState = {
 	embedding?: Array<number>;
 	main_idea: string;
 	key_points: Array<string>;
+	thing: `${string}==${string}`;
 };
 
+export type JsonTester = {
+	apiNames: ['useLLM', 'usePrompterNode', 'useParserNode', 'useThoughtNode']
+}
 export {};

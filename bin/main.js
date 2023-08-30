@@ -1,241 +1,220 @@
 #!/usr/bin/env node
-import { jsx, Fragment } from 'react/jsx-runtime';
-import { render } from 'react-nil';
-import { createServer } from 'http';
-import { SocketioServer } from '@thinairthings/websocket-server';
-import { enableMapSet } from 'immer';
-import { createContext, useContext, useRef } from 'react';
-import { useNode } from '@thinairthings/react-nodegraph';
-import { OpenAIApi, Configuration } from 'openai';
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
-import { generateSchema, getProgramFromFiles } from 'typescript-json-schema';
-import prettier from 'prettier';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import chalk from 'chalk';
 
-const secretsClient = new SecretsManagerClient({ region: "us-east-1" });
-const OpenAiContext = createContext(null);
-const useOpenai = () => useContext(OpenAiContext);
-const OpenAiProvider = ({ children }) => {
-    const [openAiToken] = useNode(async () => {
-        // Get Token
-        return (await secretsClient.send(new GetSecretValueCommand({
-            SecretId: "OPENAI_API_KEY_DEV"
-        }))).SecretString;
-    }, []);
-    const [openAiClient] = useNode(async ([token]) => {
-        return new OpenAIApi(new Configuration({
-            apiKey: token
-        }));
-    }, [openAiToken]);
-    if (openAiClient.type !== "success")
-        return null;
-    return jsx(Fragment, { children: jsx(OpenAiContext.Provider, { value: openAiClient.value, children: children }) });
+// src/main.tsx
+import { render } from "react-nil";
+import { createServer } from "http";
+import { SocketioServer } from "@thinairthings/websocket-server";
+import { enableMapSet } from "immer";
+
+// src/clients/OpenAi/OpenAiProvider.tsx
+import { createContext, useContext } from "react";
+import { Configuration, OpenAIApi } from "openai";
+import { useNode } from "@thinairthings/react-nodegraph";
+import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
+import { Fragment, jsx } from "react/jsx-runtime";
+var secretsClient = new SecretsManagerClient({ region: "us-east-1" });
+var OpenAiContext = createContext(null);
+var useOpenai = () => useContext(OpenAiContext);
+var OpenAiProvider = ({ children }) => {
+  const [openAiToken] = useNode(async () => {
+    return (await secretsClient.send(
+      new GetSecretValueCommand({
+        SecretId: "OPENAI_API_KEY_DEV"
+      })
+    )).SecretString;
+  }, []);
+  const [openAiClient] = useNode(async ([token]) => {
+    return new OpenAIApi(new Configuration({
+      apiKey: token
+    }));
+  }, [openAiToken]);
+  if (openAiClient.type !== "success")
+    return null;
+  return /* @__PURE__ */ jsx(Fragment, { children: /* @__PURE__ */ jsx(OpenAiContext.Provider, { value: openAiClient.value, children }) });
 };
 
-const scorerSystemPrompt = `
-You are the (3 of 4) node in the path; the 'Scorer Node'.
-You are responsible for drawing connections between the Thought State you receive from the Parser Node and the other Thought States in the Thought Graph.
-Your ultimate goal is to output a json object which contains a set of key value pairs of type {[nodeId: string]: numerical 3 digit decimal score from 0-1} 
-which represents the connectivity score of each Thought State in the Thought Graph.
-`;
+// src/components/hooks/useArgumentParser.ts
+import { useNode as useNode2 } from "@thinairthings/react-nodegraph";
+import chalk from "chalk";
 
-const createJsonSchema = (pathToFile, typeName) => {
-    const schema = generateSchema(getProgramFromFiles([pathToFile]), typeName)?.properties;
-    return {
-        properties: schema,
-        required: Object.keys(schema),
-    };
-};
-const objectPrettify = async (obj) => {
-    return await prettier.format(JSON.stringify(obj), { semi: false, parser: "json" });
-};
-const createOpenAiFunction = (name, description, typeName) => {
-    return {
-        name,
-        description,
-        parameters: {
-            type: "object",
-            ...createJsonSchema(resolve(__dirname, "ai-interface.d.ts"), typeName)
+// src/aiApis/Stocks.ai/Stocks.json
+var Stocks_default = {
+  apiName: "Stocks",
+  description: "This is an API with functions which can receive data about financial stocks from the Polygon.io api",
+  functions: {
+    getStockData: {
+      name: "getStockData",
+      description: "This function retrieves stock data from the Polygon.io API",
+      parameters: {
+        type: "object",
+        properties: {
+          stocksTicker: {
+            type: "string",
+            description: "The ticker symbol of the stock/equity. Example: Apple -> APPL, Tesla -> TSLA, etc."
+          },
+          multiplier: {
+            type: "number",
+            description: "The size of the timespan multiplier."
+          },
+          timespan: {
+            type: "string",
+            enum: [
+              "second",
+              "minute",
+              "hour",
+              "day",
+              "week",
+              "month",
+              "quarter",
+              "year"
+            ],
+            description: "The size of the time window."
+          },
+          from: {
+            type: "string",
+            description: "The start of the aggregate time window. Either a date with the format YYYY-MM-DD or a millisecond timestamp."
+          },
+          to: {
+            type: "string",
+            description: "The end of the aggregate time window. Either a date with the format YYYY-MM-DD or a millisecond timestamp."
+          },
+          limit: {
+            type: "number",
+            description: "Limits the number of base aggregates queried to create the aggregate results. Max 50000 and Default 5000."
+          }
         },
-    };
+        required: [
+          "stocksTicker",
+          "multiplier",
+          "timespan",
+          "from",
+          "to"
+        ],
+        additionalProperties: false
+      }
+    }
+  }
 };
 
-const parserSystemPrompt = `
-You are the (2 of 4) node in the path; the 'Parser Node'.
-You are responsible for parsing and compressing the output of the LLM into a Thought State.
-A Thought State is a json object which contains the compressed state of a Thought Node.
-The Thought State represents where 
-Your ultimate goal is to output a Thought State. 
+// src/aiApis/Stocks.ai/getStockData.ai.ts
+import { restClient } from "@polygon.io/client-js";
+import { GetSecretValueCommand as GetSecretValueCommand2, SecretsManagerClient as SecretsManagerClient2 } from "@aws-sdk/client-secrets-manager";
+var secretsClient2 = new SecretsManagerClient2({ region: "us-east-1" });
+var polygonClient = restClient((await secretsClient2.send(new GetSecretValueCommand2({
+  SecretId: "POLYGON_API_KEY_DEV"
+}))).SecretString);
+var getStockData = async ({
+  stocksTicker,
+  multiplier,
+  timespan,
+  from,
+  to,
+  limit
+}) => {
+  console.log((await secretsClient2.send(new GetSecretValueCommand2({
+    SecretId: "POLYGON_API_KEY_DEV"
+  }))).SecretString);
+  return await polygonClient.stocks.aggregates(stocksTicker, multiplier, timespan, from, to);
+};
+
+// src/components/hooks/useArgumentParser.ts
+var argumentsParserSystemPrompt = `
+You are a node designed to parse arguments from an input string and call the function with those arguments.
+You are responsible for taking the the input string and parsing into the proper argument structure for the function.
 `;
-const useParser = (processChainPreamble, t1) => {
-    const openaiClient = useOpenai();
-    const [t2] = useNode(async ([t1Value]) => {
-        const chatResponse = await openaiClient.createChatCompletion({
-            model: "gpt-4",
-            messages: [{
-                    role: "system",
-                    content: processChainPreamble
-                        + parserSystemPrompt
-                        + `You are adjacent to the (3 of 4) node in the Process Chain; the 'Scorer Node'.
-                    The Scorer Node's system prompt is: ${scorerSystemPrompt}.
-                    You are also adjacent to the (1 of 4) node in the Process Chain; the 'Prompter Node'.
-                    The Prompter Node's system prompt is: ${prompterSystemPrompt}.
-                    `
-                }, {
-                    role: "user",
-                    content: t1Value
-                }],
-            functions: [
-                {
-                    name: "send_thought_state_to_scorer_node",
-                    description: "Send the thought state to the scorer node",
-                    parameters: {
-                        type: "object",
-                        ...createJsonSchema(resolve(__dirname, "schema/ThoughtGraph.d.ts"), "ThoughtState")
-                    },
-                }
-            ],
-            function_call: {
-                name: "send_thought_state_to_scorer_node",
-            }
-        });
-        return chatResponse.data.choices[0].message;
-    }, [t1], {
-        pending: () => console.log(chalk.yellow("Parser is pending")),
-        success: async (value) => console.log(chalk.green(`Parser Output: ${await objectPrettify(value)}`)),
-        failure: {
-            final: async ({ errorLog }) => {
-                console.log(chalk.yellow(await objectPrettify(errorLog[0])));
-            },
-        }
+var useArgumentParser = (dispatcherEdge) => {
+  const openaiClient = useOpenai();
+  const [argumentsEdge] = useNode2(async ([{ functionName, argumentsEncoding }]) => {
+    const chatResponse = await openaiClient.createChatCompletion({
+      model: "gpt-4",
+      messages: [{
+        role: "system",
+        content: argumentsParserSystemPrompt
+      }, {
+        role: "user",
+        content: argumentsEncoding
+      }],
+      functions: [{
+        name: functionName,
+        description: Stocks_default.functions[functionName].description,
+        parameters: Stocks_default.functions[functionName].parameters
+      }],
+      function_call: {
+        name: functionName
+      }
     });
-    return t2;
+    const args = JSON.parse(chatResponse.data.choices[0].message.function_call.arguments);
+    const stockData = await getStockData(args);
+    console.log(stockData);
+    return chatResponse.data.choices[0].message;
+  }, [dispatcherEdge], {
+    pending: () => console.log(chalk.yellow("Parser is pending")),
+    success: async (value) => console.log(chalk.green(`Parser Output: ${JSON.stringify(value)}`)),
+    failure: {
+      final: async ({ errorLog }) => {
+        console.log("Failure");
+        console.log(chalk.yellow(
+          JSON.stringify(errorLog[0])
+        ));
+      }
+    }
+  });
+  return argumentsEdge;
 };
 
-const prompterSystemPrompt = `
-You are the (1 of 4) node in the path; the 'Prompter Node'.
-You are responsible for encoding the relevant Thought Node state from the Thought Graph into the prompt.
-You are also responsible for encoding the relevant direct inputs from the parent Thought Node into the prompt.
-Your ultimate goal is to output a prompt which can be sent to an LLM.
-`;
-const usePrompter = (processChainPreamble, inputPrompt) => {
-    const openaiClient = useOpenai();
-    const [prompterOutput] = useNode(async () => {
-        const chatResponse = await openaiClient.createChatCompletion({
-            model: "gpt-4",
-            messages: [{
-                    role: "system",
-                    content: processChainPreamble
-                        + prompterSystemPrompt
-                        + `You are adjacent to the (2 of 4) node in the Process Chain; the 'Parser Node'.
-                    The Parser Node's system prompt is: ${parserSystemPrompt}
-                    `
-                }, {
-                    role: "user",
-                    content: inputPrompt
-                }],
-            functions: [
-                createOpenAiFunction("send_prompt_to_llm", "Send the prompt to the LLM", "LLMProps")
-                // {
-                //     name: "send_prompt_to_llm",
-                //     description: "Send the prompt to the LLM",
-                //     parameters: {
-                //         type: "object",
-                //         ...createJsonSchema(
-                //             resolve(__dirname, "components/hooks/useLLM.d.ts"),
-                //             "LLMProps"
-                //         )
-                //     },
-                // }
-            ],
-            function_call: {
-                name: "send_prompt_to_llm",
-            }
-        });
-        return JSON.parse(chatResponse.data.choices[0].message?.function_call?.arguments);
-    }, [], {
-        pending: () => console.log(chalk.yellow("Prompter is pending")),
-        success: async (value) => console.log(chalk.green(await objectPrettify(value))),
-        failure: {
-            final: ({ errorLog }) => console.log(chalk.red(`Prompter Error: ${errorLog[0].message}`)),
-        }
-    });
-    return prompterOutput;
+// src/components/ThoughtNode/ThoughtNode.tsx
+import { Fragment as Fragment2, jsx as jsx2 } from "react/jsx-runtime";
+var ThoughtNode = ({
+  rawInputEdge
+}) => {
+  const nextNodes = useArgumentParser({
+    type: "success",
+    value: {
+      functionName: "getStockData",
+      argumentsEncoding: "I want to see the data for Nvidia from the beginning of 2022 to the middle of it on a daily bar chart."
+    }
+  });
+  return /* @__PURE__ */ jsx2(Fragment2, {});
 };
 
-const useLLM = (inputPrompt) => {
-    const openaiClient = useOpenai();
-    const [t2] = useNode(async ([inputPrompt]) => {
-        const response = await openaiClient.createChatCompletion({
-            model: "gpt-4",
-            messages: [{
-                    role: "user",
-                    content: inputPrompt.prompt
-                }],
-        });
-        return response.data.choices[0].message?.content;
-    }, [inputPrompt], {
-        pending: () => console.log(chalk.yellow("LLM is running")),
-        success: (value) => console.log(chalk.green(`LLM Output: ${value}`)),
-    });
-    return t2;
+// src/components/RootThought/RootThought.tsx
+import { Fragment as Fragment3, jsx as jsx3 } from "react/jsx-runtime";
+var RootThought = ({ rawInputEdge }) => {
+  return /* @__PURE__ */ jsx3(Fragment3, { children: /* @__PURE__ */ jsx3(OpenAiProvider, { children: /* @__PURE__ */ jsx3(
+    ThoughtNode,
+    {
+      rawInputEdge
+    }
+  ) }) });
 };
 
-const processChainPreamble = `
-    A 'Process Chain' is an atomic directed graph with an order of 4 path of nodes nested within a 'Thought Node' of a 'Thought Graph'.
-    A Thought Node is a node in a Thought Graph which contains 'Thought State'.
-    The purpose of a Process Chain is to perform a series of actions based on a prompt and a set of direct inputs derived from the parent Thought Node of the Thought Node which contains the Process Chain.
-`;
-const useProcessChain = ({ prompt }) => {
-    const prompterOutput = usePrompter(processChainPreamble, prompt);
-    const llmOutput = useLLM(prompterOutput);
-    const parserOutput = useParser(processChainPreamble, llmOutput);
-    return parserOutput;
-};
-// const useScorer = (processChainPreamble: string, t1: ReturnType<typeof useParser>) => {
-//     const t2 = useNode(async ([t2Value]) => {
-//         const chatResponse = await openaiClient.createChatCompletion({
-//             model: "gpt-4",
-//             messages: [{ 
-//                 role: "system", 
-//                 content: processChainPreamble 
-//                     + scorerSystemPrompt
-//             }, {
-//                 role: "user",
-//                 content: t2Value
-//             }]
-//         })
-//         return chatResponse.data.choices[0].message?.content!
-//     }, [t1])
-//     return t2
-// }
-
-const DepthContext = createContext(0);
-const useDepth = () => useContext(DepthContext);
-const RootThought = () => {
-    // Depth Ref
-    const depthRef = useRef(0);
-    return jsx(Fragment, { children: jsx(OpenAiProvider, { children: jsx(DepthContext.Provider, { value: depthRef.current + 1, children: jsx(Thought, {}) }) }) });
-};
-const Thought = ({ t1, lifecycle }) => {
-    const depth = useDepth();
-    useProcessChain({
-        prompt: "I want to know more about how sales fluctuate by the season"
-    });
-    // Decision
-    return jsx(DepthContext.Provider, { value: depth + 1 });
-};
-
+// src/main.tsx
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+import { jsx as jsx4 } from "react/jsx-runtime";
 enableMapSet();
-const httpServer = createServer();
-const socketioServer = new SocketioServer(httpServer, {});
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-render(jsx(RootThought, {}));
+var httpServer = createServer();
+var socketioServer = new SocketioServer(httpServer, {});
+var __filename = fileURLToPath(import.meta.url);
+var __dirname = dirname(__filename);
+render(
+  /* @__PURE__ */ jsx4(
+    RootThought,
+    {
+      rawInputEdge: {
+        type: "success",
+        value: {
+          rawInput: "I want to see the data for Apple from 2011 to 2012 on a daily bar chart."
+        }
+      }
+    }
+  )
+);
 httpServer.listen(3001, () => {
-    console.log('listening on port 3001');
+  console.log("listening on port 3001");
 });
-
-export { __dirname, __filename, socketioServer };
+export {
+  __dirname,
+  __filename,
+  socketioServer
+};

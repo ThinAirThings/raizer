@@ -7,10 +7,8 @@
         "flywheel": "bin/main.js"
     },
     "scripts": {
-        "prod": "rollup -c && node bin/main.js",
-        "build-types": "dts-bundle-generator -o bin/ai-interface.d.ts src/ai-interface.d.ts",
-        "build": "rollup -c",
-        "dev": "nodemon --watch src --ext ts,tsx --exec 'rollup -c && node bin/main.js'"
+        "build": "node ./esbuild.mjs",
+        "dev": "npm run build && node bin/main.js"
     },
     "files": [
         "bin"
@@ -20,7 +18,9 @@
         "@liveblocks/client": "^1.0.9",
         "@liveblocks/node": "^1.0.9",
         "@liveblocks/react": "^1.1.0",
+        "@polygon.io/client-js": "^7.2.6",
         "@thinairthings/react-nodegraph": "^1.0.5",
+        "@thinairthings/ts-ai-api": "^1.0.9",
         "@thinairthings/websocket-client": "^1.0.19",
         "@thinairthings/websocket-server": "^1.0.63",
         "chalk": "^4.1.2",
@@ -47,6 +47,7 @@
         "@types/ws": "^8.5.4",
         "@typescript-eslint/typescript-estree": "^6.4.1",
         "dts-bundle-generator": "^8.0.1",
+        "esbuild": "^0.19.2",
         "nodemon": "^2.0.22",
         "rollup-plugin-dts": "^6.0.0",
         "ts-node": "^10.9.1",

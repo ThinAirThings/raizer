@@ -1,15 +1,18 @@
 import { FC } from "react"
-import { DepthContext, useDepth } from "../RootThought/RootThought"
 import { useProcessChain } from "../ProcessChain/useProcessChain.ai"
+import { useArgumentParser } from "../hooks/useArgumentParser"
 
 
-export const ThoughtNode: FC<{rawEdge: Parameters<typeof useProcessChain>[0]}> = ({
-    rawEdge
+export const ThoughtNode: FC<{rawInputEdge: Parameters<typeof useProcessChain>[0]}> = ({
+    rawInputEdge
 }) => {
-    const depth = useDepth()
-    const nextNodes = useProcessChain(rawEdge)
+    const nextNodes = useArgumentParser({
+        type: "success",
+        value: {
+            functionName: "getStockData",
+            argumentsEncoding: 'I want to see the data for Nvidia from the beginning of 2022 to the middle of it on a daily bar chart.'
+        }
+    })
     // Decision
-    return <DepthContext.Provider value={depth+1}>
-
-    </DepthContext.Provider>
+    return <></>
 }
