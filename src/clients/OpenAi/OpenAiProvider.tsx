@@ -1,6 +1,6 @@
 import { ReactNode, createContext, useContext, useRef } from "react";
 import { Configuration, OpenAIApi } from 'openai'
-import { useNode } from "@thinairthings/react-nodegraph";
+import { useVertex } from "@thinairthings/react-nodegraph";
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 
 
@@ -9,7 +9,7 @@ const OpenAiContext = createContext<OpenAIApi>(null as any)
 export const useOpenai = () => useContext(OpenAiContext)
 
 export const OpenAiProvider = ({children}: {children: ReactNode}) => {
-    const [openAiToken] = useNode(async () => {
+    const [openAiToken] = useVertex(async () => {
         // Get Token
         return (await secretsClient.send(
             new GetSecretValueCommand({
@@ -17,7 +17,7 @@ export const OpenAiProvider = ({children}: {children: ReactNode}) => {
             })
         )).SecretString!
     }, [])
-    const [openAiClient] = useNode(async ([token]) => {
+    const [openAiClient] = useVertex(async ([token]) => {
         return new OpenAIApi(new Configuration({
             apiKey: token
         }))

@@ -19,7 +19,7 @@
         "@liveblocks/node": "^1.0.9",
         "@liveblocks/react": "^1.1.0",
         "@polygon.io/client-js": "^7.2.6",
-        "@thinairthings/react-nodegraph": "^1.0.5",
+        "@thinairthings/react-nodegraph": "^1.0.19",
         "@thinairthings/ts-ai-api": "^1.0.9",
         "@thinairthings/websocket-client": "^1.0.19",
         "@thinairthings/websocket-server": "^1.0.63",

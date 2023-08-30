@@ -1,10 +1,9 @@
 
-import { Edge, useNode } from "@thinairthings/react-nodegraph"
+import { Edge, useVertex } from "@thinairthings/react-nodegraph"
 import chalk from "chalk"
 import { useOpenai } from "../../clients/OpenAi/OpenAiProvider"
 import Stocks from '../../aiApis/Stocks.ai/Stocks.json'
 import { getStockData } from "../../aiApis/Stocks.ai/getStockData.ai"
-import { writeFile } from "fs/promises"
 
 export const argumentsParserSystemPrompt = `
 You are a node designed to parse arguments from an input string and call the function with those arguments.
@@ -15,7 +14,7 @@ export const useArgumentParser = (dispatcherEdge: Edge<{
     argumentsEncoding: string
 }>) => {
     const openaiClient = useOpenai()
-    const [argumentsEdge] = useNode(async ([{functionName, argumentsEncoding}]) => {
+    const [argumentsEdge] = useVertex(async ([{functionName, argumentsEncoding}]) => {
 
         const chatResponse = await openaiClient.createChatCompletion({
             model: "gpt-4",
