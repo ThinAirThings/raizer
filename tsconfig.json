@@ -14,6 +14,6 @@
         "jsx": "react-jsx",
     },
     "include": [
-        "src/**/*.ts", "src/**/*.tsx", "framework/**/*.ts", "framework/**/*.tsx", "framework/generate-ai-interface.cts"],
-    "exclude": ["node_modules"]
+        "src/**/*.ts", "src/**/*.tsx"],
+    "exclude": ["node_modules", "src/**/ProcessChain/*"]
 }

@@ -1,0 +1,20 @@
+{
+    "name": "useBasicStockChart",
+    "description": "This function displays stock data in a chart",
+    "input": {
+        "type": "object",
+        "properties": {
+            "time": {
+                "type": "string"
+            },
+            "value": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "time",
+            "value"
+        ],
+        "additionalProperties": false
+    }
+}

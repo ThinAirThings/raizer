@@ -2,8 +2,8 @@
 import { Edge, useVertex } from "@thinairthings/react-nodegraph"
 import chalk from "chalk"
 import { useOpenai } from "../../clients/OpenAi/OpenAiProvider"
-import Stocks from '../../aiApis/Stocks.ai/Stocks.json'
-import { getStockData } from "../../aiApis/Stocks.ai/getStockData.ai"
+import Stocks from '../../aiApis/Stocks.ai.api/Stocks.json'
+import { getStockData } from "../../aiApis/Stocks.ai.api/useVertexGetStockData.ai"
 
 export const argumentsParserSystemPrompt = `
 You are a node designed to parse arguments from an input string and call the function with those arguments.

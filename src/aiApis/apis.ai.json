@@ -1,0 +1,6 @@
+
+
+{
+    "Stocks": "This is an API with functions which can receive data about financial stocks from the Polygon.io api",
+    "Charts": "This is an API with functions which can create charts for visualizing data."
+}

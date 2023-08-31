@@ -7,7 +7,6 @@ import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 import { RootAi } from './components/RootAi/RootAi'
 
-
 enableMapSet()
 const httpServer = createServer()
 export const socketioServer = new SocketioServer(httpServer, {})
@@ -15,12 +14,9 @@ export const __filename = fileURLToPath(import.meta.url);
 export const __dirname = dirname(__filename);
 render (
     <RootAi
-        rawInputEdge={{
-            type: 'success',
-            value: {
-                rawInput: 'I want to see the data for Apple from 2011 to 2012 on a daily bar chart.'
-            }
-        }}
+        userId="777"
+        spaceId="777"
+        rawInput='I want to see the data for Apple from 2011 to 2012 on a daily bar chart.'
     />
 )
 
