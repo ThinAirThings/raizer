@@ -35,18 +35,23 @@ var OpenAiProvider = ({ children }) => {
 };
 
 // src/components/RootAi/RootAi.tsx
-import { LiveblocksRoomProvider } from "@thinairthings/liveblocks-model";
+import { LiveblocksNodeRoomProvider } from "@thinairthings/liveblocks-model";
 
 // src/components/LiveblocksTestConnection.tsx
-import { useStorage } from "@thinairthings/liveblocks-model";
+import { useErrorListener, useLostConnectionListener, useStorage } from "@thinairthings/liveblocks-model";
 import { Fragment as Fragment2, jsx as jsx2 } from "react/jsx-runtime";
 var LiveblocksTestConnection = () => {
+  useErrorListener((error) => {
+    console.log(error);
+  });
+  useLostConnectionListener((event) => {
+    console.log(event);
+  });
   const data = useStorage((root) => {
     console.log("Here");
     console.log(root);
     return root;
   });
-  console.log(data);
   return /* @__PURE__ */ jsx2(Fragment2, {});
 };
 
@@ -58,12 +63,12 @@ var RootAi = ({
   rawInput
 }) => {
   return /* @__PURE__ */ jsx3(Fragment3, { children: /* @__PURE__ */ jsx3(OpenAiProvider, { children: /* @__PURE__ */ jsx3(
-    LiveblocksRoomProvider,
+    LiveblocksNodeRoomProvider,
     {
       userId,
       spaceId,
       serverName: `aiNode-${userId}-${spaceId}`,
-      children: /* @__PURE__ */ jsx3(LiveblocksTestConnection, {})
+      children: () => /* @__PURE__ */ jsx3(LiveblocksTestConnection, {})
     }
   ) }) });
 };

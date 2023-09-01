@@ -2,7 +2,7 @@ import { FC } from "react";
 import { Edge } from "@thinairthings/react-nodegraph"
 import { OpenAiProvider } from "../../clients/OpenAi/OpenAiProvider";
 import { ThoughtNode } from "../ThoughtNode/ThoughtNode";
-import { LiveblocksRoomProvider } from "@thinairthings/liveblocks-model";
+import { LiveblocksNodeRoomProvider } from "@thinairthings/liveblocks-model";
 import { LiveblocksTestConnection } from "../LiveblocksTestConnection";
 
 
@@ -17,16 +17,16 @@ export const RootAi: FC<{
 }) => {
     return <>
         <OpenAiProvider>
-            <LiveblocksRoomProvider
+            <LiveblocksNodeRoomProvider
                 userId={userId}
                 spaceId={spaceId}
                 serverName={`aiNode-${userId}-${spaceId}`}
             >
-                <LiveblocksTestConnection/>
+                {() => <LiveblocksTestConnection/>}
                 {/* <ThoughtNode
                     rawInputEdge={rawInputEdge}
                 /> */}
-            </LiveblocksRoomProvider>
+            </LiveblocksNodeRoomProvider>
         </OpenAiProvider>
     </>
 }

@@ -1,4 +1,4 @@
-import { Edge, useVertex } from "@thinairthings/react-nodegraph"
+import { Edge } from "@thinairthings/react-nodegraph"
 import { useOpenai } from "../../../clients/OpenAi/OpenAiProvider"
 import getStockDataJson from "../../Stocks.ai.api/getStockData/getStockData.ai.json"
 import useBasicStockChartJson from "./useBasicStockChart.ai.json"
@@ -76,8 +76,7 @@ export const useBasicStockChart = (
                 function_call: {
                     name: useBasicStockChartJson.name
                 }
-            })
-            
+            }) 
         }
     }, [input])
     const [basicStockChartEdge] = useVertex(async ([callback]) => {
