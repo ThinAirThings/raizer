@@ -1,10 +1,7 @@
 import { FC } from "react";
-import { Edge } from "@thinairthings/react-nodegraph"
-import { OpenAiProvider } from "../../clients/OpenAi/OpenAiProvider";
-import { ThoughtNode } from "../ThoughtNode/ThoughtNode";
 import { LiveblocksNodeRoomProvider } from "@thinairthings/liveblocks-model";
-import { LiveblocksTestConnection } from "../LiveblocksTestConnection";
-
+import { OpenaiProvider } from "../../clients/OpenAi/OpenAiProvider";
+import { ProcessChain } from "../ProcessChain/ProcessChain";
 
 export const RootAi: FC<{
     userId: string
@@ -16,18 +13,15 @@ export const RootAi: FC<{
     rawInput
 }) => {
     return <>
-        <OpenAiProvider>
+        <OpenaiProvider>
             <LiveblocksNodeRoomProvider
                 userId={userId}
                 spaceId={spaceId}
                 serverName={`aiNode-${userId}-${spaceId}`}
             >
-                {() => <LiveblocksTestConnection/>}
-                {/* <ThoughtNode
-                    rawInputEdge={rawInputEdge}
-                /> */}
+                {() => <ProcessChain prompt={rawInput} />}
             </LiveblocksNodeRoomProvider>
-        </OpenAiProvider>
+        </OpenaiProvider>
     </>
 }
 

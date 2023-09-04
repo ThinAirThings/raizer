@@ -1,14 +1,15 @@
 
 import { restClient } from '@polygon.io/client-js';
 import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
-import { Edge, useVertex } from '@thinairthings/react-nodegraph';
 
 const secretsClient = new SecretsManagerClient({ region: "us-east-1" });
 const polygonClient = restClient((await secretsClient.send(new GetSecretValueCommand({
     SecretId: "POLYGON_API_KEY_DEV"
 }))).SecretString!);
 
-export type _Input = {
+
+/** This function retrieves stock data from the Polygon.io API*/
+export const getStockData = async (input: {
     /**The ticker symbol of the stock/equity. Examples: APPL, ABT, MMM, ACN, ADBE*/
     stocksTicker: string,
     /**The size of the timespan multiplier.*/
@@ -21,18 +22,7 @@ export type _Input = {
     to: `${number}-${number}-${number}`,
     /**Limits the number of base aggregates queried to create the aggregate results. Max 50000 and Default 5000.*/
     limit?: number,
-}
-export const useGetStockData = (
-/** This function retrieves stock data from the Polygon.io API*/
-    input: Edge<_Input>
-) => { 
-    const [stockDataEdge] = useVertex(async ([{stocksTicker, multiplier, timespan, from ,to}]) => {
-        return await polygonClient.stocks.aggregates(stocksTicker, multiplier, timespan, from, to)
-    }, [input])
-    return stockDataEdge
-}
-
-export type _Output = {
+}): Promise<{
     /** The exchange symbol that this item is traded under.*/
     ticker: string
     /** Whether or not this response was adjusted for splits.*/
@@ -68,4 +58,12 @@ export type _Output = {
     }>
     /** If present, this value can be used to fetch the next page of data. */
     next_url?: string
+}> => { 
+    return polygonClient.stocks.aggregates(
+        input.stocksTicker, 
+        input.multiplier, 
+        input.timespan, 
+        input.from, 
+        input.to
+    ) as any
 }

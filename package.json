@@ -7,7 +7,7 @@
         "flywheel": "bin/main.js"
     },
     "scripts": {
-        "build": "node ./esbuild.mjs",
+        "build": "tsup-node",
         "dev": "npm run build && node bin/main.js"
     },
     "files": [
@@ -20,8 +20,8 @@
         "@liveblocks/react": "^1.1.0",
         "@polygon.io/client-js": "^7.2.6",
         "@thinairthings/liveblocks-model": "^1.0.86",
-        "@thinairthings/react-nodegraph": "^1.0.22",
-        "@thinairthings/ts-ai-api": "^1.0.10",
+        "@thinairthings/react-nodegraph": "^1.0.24",
+        "@thinairthings/ts-ai-api": "^1.0.29",
         "@thinairthings/websocket-client": "^1.0.19",
         "@thinairthings/websocket-server": "^1.0.63",
         "chalk": "^4.1.2",
@@ -53,6 +53,7 @@
         "rollup-plugin-dts": "^6.0.0",
         "ts-node": "^10.9.1",
         "tslib": "^2.5.0",
+        "tsup": "^7.2.0",
         "typescript": "^5.2.2"
     }
 }
