@@ -3,7 +3,7 @@ import {useOpenai} from '../../clients/OpenAi/useOpenai'
 import { useNode } from "@thinairthings/react-nodegraph";
 import { getStockData } from "../../apis/Stocks/getStockData/getStockData";
 import {createSimpleLineChart} from '../../apis/Charts/createSimpleLineChart/createSimpleLineChart'
-import { useFunctionCall } from "./useFunctionCall/useFunctionCall";
+import { useFunctionCall } from "../FunctionCall/hooks/useFunctionCall";
 
 
 export const ProcessChain: FC<{

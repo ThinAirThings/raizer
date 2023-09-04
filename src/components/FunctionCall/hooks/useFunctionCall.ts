@@ -6,14 +6,21 @@ import { useOpenai } from "../../../clients/OpenAi/useOpenai"
 export const useFunctionCall = <T,> ({
     context,
     fn,
-    lifecycleHandlers
 }: {
     context: string,
     fn: (input: any) => Promise<T>
-    lifecycleHandlers?: Parameters<typeof useNode<any, T>>[2]
-}): Edge<T> => {
+}, lifecycleHandlers?: Parameters<typeof useNode<any, {
+    result: T,
+    outputForm: Record<string, any>
+}>>[2]
+): Edge<Awaited<ReturnType<
+    ReturnType<typeof useOpenai>['callFunction']
+>>> => {
     const openai = useOpenai()
-    return useNode(async () => {
+    return useNode<any, {
+        result: T,
+        outputForm: Record<string, any>
+    }>(async () => {
         const result = await openai.callFunction({ context, fn })
         return result
     }, [], lifecycleHandlers)[0]
