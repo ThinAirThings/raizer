@@ -1,20 +1,18 @@
 import { NodeValue, useEdge } from "@thinairthings/react-nodegraph";
 import { FunctionCallChain } from "../FunctionCallChain";
-import { FunctionCallParamsNode } from "./useFunctionCallEdge";
-
+import { useOpenai } from "../../../clients/OpenAi/useOpenai";
+import { AirNodeTypes } from "../../NodeTypes";
 
 
 export const useFunctionLoaderEdge = (
-    input: Parameters<typeof FunctionCallChain<any>>[0]['functionCallChainInput']
-): [FunctionCallParamsNode<any>] => {
-    const [functionParamsNode] = useEdge(async ([{fn, sourceNode}]) => {
-        switch (sourceNode.type) {
-            case "functionParams":
-                return {
-                    fn,
-                    params: sourceNode.value.params,
-                    context: sourceNode.value.context
-                } as NodeValue<FunctionCallParamsNode<any>>
+    input: Parameters<typeof FunctionCallChain>[0]['functionCallChainInputNode']
+): [AirNodeTypes&{type: 'functionCallParams'}] => {
+    const openai = useOpenai()
+    const [functionParamsNode] = useEdge(async ([input]) => {
+        switch (input.subtype) {
+            case "root":
+                // Generate Arguments
+                return openai.generateArguments(input) 
             case "functionResult":
                 // RUN PRE FUNCTION HANDLER
                 // Check output form and input form
@@ -28,7 +26,7 @@ export const useFunctionLoaderEdge = (
             //     return null as never
         }
     }, [input], {
-        type: 'functionParams'
+        type: 'functionCallParams'
     })
     return [functionParamsNode]
 }

@@ -1,6 +1,6 @@
 import { AirNode, NodeValue, useEdge } from "@thinairthings/react-nodegraph";
-import { FunctionCallResultNode } from "../FunctionCallChain/edges/useFunctionCallEdge";
 import { RootNode } from "../RootAi/RootAi";
+import { AirNodeTypes } from "../NodeTypes";
 
 
 
@@ -8,8 +8,7 @@ export const DecisionChain = ({
     decisionChainInput
 }: {
     decisionChainInput: (
-        | RootNode
-        | FunctionCallResultNode<any>
+        | AirNodeTypes&{type: 'root'|'functionResult'}
     )
 }) => {
 

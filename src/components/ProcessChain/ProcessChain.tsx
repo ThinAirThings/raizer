@@ -1,7 +1,7 @@
 import { FC } from "react";
 import {useOpenai} from '../../clients/OpenAi/useOpenai'
 import { useNode } from "@thinairthings/react-nodegraph";
-import { getStockData } from "../../apis/Stocks/getStockData/getStockData";
+import { getStockData } from "../../apis/Stocks/getStocksData/getStocksData";
 import {createSimpleLineChart} from '../../apis/Charts/createSimpleLineChart/createSimpleLineChart'
 import { useFunctionCall } from "../FunctionCall/edges/useFunctionCallEdge";
 

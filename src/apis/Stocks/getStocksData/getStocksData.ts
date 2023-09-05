@@ -9,7 +9,7 @@ const polygonClient = restClient((await secretsClient.send(new GetSecretValueCom
 
 
 /** This function retrieves stock data from the Polygon.io API*/
-export const getStockData = async (input: {
+export const getStocksData = async (input: {
     /**The ticker symbol of the stock/equity. Examples: APPL, ABT, MMM, ACN, ADBE*/
     stocksTicker: string,
     /**The size of the timespan multiplier.*/

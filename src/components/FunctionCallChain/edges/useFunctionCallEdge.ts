@@ -1,28 +1,19 @@
 import { AirNode, LifeCycleHandlers, NodeValue, useEdge } from "@thinairthings/react-nodegraph"
 import { jsonStructureFromFunction } from "@thinairthings/ts-ai-api"
+import { FunctionIndex } from "../../../apis/FunctionIndex"
 
 
-export type AsyncFunction = (input: any) => Promise<any>
-export type FunctionCallParamsNode<T extends AsyncFunction> = Parameters<typeof useFunctionCallEdge<T>>[0]
-export type FunctionCallResultNode<T> = AirNode<{
-    context: string
-    result: T
-    outputForm: Record<string, any>
-}, 'functionResult'>
-
-export const useFunctionCallEdge = <T extends AsyncFunction> (
+export const useFunctionCallEdge = (
     functionCallParamsNode: AirNode<{
-        fn: T extends (input: infer P) => Promise<infer R>? (input: P) => Promise<R> : never
-        context: string
-        params: T extends (input: infer P) => Promise<infer _>? P : never
-    }, 'functionParams'>,
-    lifecycleHandlers?: LifeCycleHandlers<[typeof functionCallParamsNode], NodeValue<FunctionCallResultNode<T>>>
-): [FunctionCallResultNode<Awaited<ReturnType<(typeof functionCallParamsNode & {state: 'success'})['value']['fn']>>>] => {
-    const [functionOutputNode] = useEdge(async ([{fn, params, context}]) => {
+        functionKey: keyof typeof FunctionIndex
+        params: Parameters<typeof FunctionIndex[keyof typeof FunctionIndex]>[0]
+    }, 'functionCallParams'>,
+    lifecycleHandlers?: LifeCycleHandlers<[typeof functionCallParamsNode], ReturnType<typeof FunctionIndex[keyof typeof FunctionIndex]>>
+) => {
+    const [functionOutputNode] = useEdge(async ([{functionKey, params}]) => {
         return {
-            context,
-            result: await fn(params),
-            outputForm: (await jsonStructureFromFunction(fn)).output
+            result: await FunctionIndex[functionKey](params as any),
+            outputForm: (await jsonStructureFromFunction(FunctionIndex[functionKey])).output
         }
     }, [functionCallParamsNode], {
         type: 'functionResult',
