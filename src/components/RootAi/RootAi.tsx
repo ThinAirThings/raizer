@@ -1,7 +1,13 @@
 import { FC } from "react";
 import { LiveblocksNodeRoomProvider } from "@thinairthings/liveblocks-model";
 import { OpenaiProvider } from "../../clients/OpenAi/OpenAiProvider";
-import { ProcessChain } from "../ProcessChain/ProcessChain";
+import { AirNode } from "@thinairthings/react-nodegraph";
+import { DecisionChain } from "../DecisionChain/DecisionChain";
+
+
+export type RootNode = AirNode<{
+    initialPrompt: string
+}, 'root'>
 
 export const RootAi: FC<{
     userId: string
@@ -19,7 +25,13 @@ export const RootAi: FC<{
                 spaceId={spaceId}
                 serverName={`aiNode-${userId}-${spaceId}`}
             >
-                {() => <ProcessChain prompt={rawInput} />}
+                {() => <DecisionChain decisionChainInput={{
+                    type: 'root',
+                    state: 'success',
+                    value: {
+                        initialPrompt: rawInput
+                    }
+                }} />}
             </LiveblocksNodeRoomProvider>
         </OpenaiProvider>
     </>
