@@ -1,19 +1,16 @@
+import { AirNode, NodeValue } from "@thinairthings/react-nodegraph";
 import { jsonStructureFromFunction } from "@thinairthings/ts-ai-api";
 import { OpenAIApi } from "openai";
+import { useFunctionLoaderEdge } from "../../../components/FunctionCallChain/edges/useFunctionLoaderEdge";
+import { useFunctionCallEdge } from "../../../components/FunctionCallChain/edges/useFunctionCallEdge";
 
 
-export const transformDataFactory = (openaiClient: OpenAIApi) => async <T1,T2>({
-    prompt,
-    fn1,
-    fn2
-}: {
-    prompt: string,
-    fn1: (input: any) => Promise<T1>,
-    fn2: (input: any) => Promise<T2>
-}) => {
+export const transformDataFactory = (openai: OpenAIApi) => async (
+    input: NodeValue<Parameters<typeof useFunctionLoaderEdge>[0]>&{subtype: 'functionResult'}
+): Promise<NodeValue<Parameters<typeof useFunctionCallEdge>[0]>> => {
     const jsonStructureFn1 = await jsonStructureFromFunction(fn1)
     const jsonStructureFn2 = await jsonStructureFromFunction(fn2)
-    const chatResponse = await openaiClient.createChatCompletion({
+    const chatResponse = await openai.createChatCompletion({
         model: 'gpt-4',
         messages: [{
             role: "system",

@@ -1,26 +1,18 @@
 import { useFunctionCallEdge } from "./edges/useFunctionCallEdge";
-import { AirNode, NodeValue } from "@thinairthings/react-nodegraph";
+import { CompositeAirNode } from "@thinairthings/react-nodegraph";
 import { useFunctionLoaderEdge } from "./edges/useFunctionLoaderEdge";
 import { DecisionChain } from "../DecisionChain/DecisionChain";
 import { FunctionIndex } from "../../apis/FunctionIndex";
-import { AirNodeTypes } from "../NodeTypes";
-
+import { AiNodeUnion } from "../AiNodeUnion";
 
 export const FunctionCallChain = ({
     functionCallChainInputNode
-}:{
-    functionCallChainInputNode: AirNode<({
+}: {
+    functionCallChainInputNode: CompositeAirNode<{
         initialPrompt: string
         t1Reasoning: string
         functionKey: keyof typeof FunctionIndex
-    } & (
-        | {
-            subtype: 'root'
-        }
-        | {
-            subtype: 'functionResult'
-        } & (NodeValue<AirNodeTypes&{type: 'functionResult'}>)
-    )), 'functionChainInput'>
+    },'functionChainInput', AiNodeUnion, ('functionResult'|'root')> 
 }) => {
 
     // Function Loader
@@ -32,3 +24,5 @@ export const FunctionCallChain = ({
         <DecisionChain decisionChainInput={functionResultNode} />
     </>
 }
+
+

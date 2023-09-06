@@ -7,11 +7,12 @@ import { generateArgumentsFactory } from "./api/generateArgumentsFactory"
 
 export const useOpenai = () => {
     const openaiClient = useContext(OpenaiContext)
-    return useMemo(() => {
-        return {
-            generateArguments: generateArgumentsFactory(openaiClient),
-            callFunction: callFunctionFactory(openaiClient),
-            transformData: transformDataFactory(openaiClient)
-        }
-    }, [openaiClient])
+    // return useMemo(() => {
+    //     return {
+    //         generateArguments: generateArgumentsFactory(openaiClient),
+    //         callFunction: callFunctionFactory(openaiClient),
+    //         transformData: transformDataFactory(openaiClient)
+    //     }
+    // }, [openaiClient])
+    return openaiClient
 }

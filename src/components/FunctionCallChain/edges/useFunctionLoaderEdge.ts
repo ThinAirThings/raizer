@@ -1,7 +1,7 @@
 import { NodeValue, useEdge } from "@thinairthings/react-nodegraph";
 import { FunctionCallChain } from "../FunctionCallChain";
 import { useOpenai } from "../../../clients/OpenAi/useOpenai";
-import { AirNodeTypes } from "../../NodeTypes";
+import { AirNodeTypes } from "../../AiNodeUnion";
 
 
 export const useFunctionLoaderEdge = (
@@ -30,3 +30,4 @@ export const useFunctionLoaderEdge = (
     })
     return [functionParamsNode]
 }
+

@@ -1,6 +1,6 @@
 import { AirNode, NodeValue, useEdge } from "@thinairthings/react-nodegraph";
 import { RootNode } from "../RootAi/RootAi";
-import { AirNodeTypes } from "../NodeTypes";
+import { AirNodeTypes } from "../AiNodeUnion";
 
 
 
