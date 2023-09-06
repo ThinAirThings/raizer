@@ -7,7 +7,7 @@ import { DecisionChain } from "../DecisionChain/DecisionChain";
 
 export type RootNode = AirNode<{
     initialPrompt: string
-}, 'root'>
+}, 'RootNode'>
 
 export const RootAi: FC<{
     userId: string
@@ -25,8 +25,8 @@ export const RootAi: FC<{
                 spaceId={spaceId}
                 serverName={`aiNode-${userId}-${spaceId}`}
             >
-                {() => <DecisionChain decisionChainInput={{
-                    type: 'root',
+                {() => <DecisionChain input={{
+                    type: 'DecisionChainInputNode',
                     state: 'success',
                     value: {
                         initialPrompt: rawInput

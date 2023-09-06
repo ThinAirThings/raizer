@@ -1,14 +1,12 @@
 import { OpenAIApi } from "openai"
-import { useFunctionLoaderEdge } from "../../../components/FunctionCallChain/edges/functionLoader/useFunctionLoaderEdge"
 import { NodeValue } from "@thinairthings/react-nodegraph"
 import { jsonStructureFromFunction } from "@thinairthings/ts-ai-api"
-import { FunctionIndex } from "../../../apis/FunctionIndex"
-import { AiNodeUnion } from "../../../components/AiNodeUnion"
-import { FunctionCallChainBaseInputNode } from "../../../components/FunctionCallChain/FunctionCallChain"
-import { FunctionCallOutputNode } from "../../../components/FunctionCallChain/edges/useFunctionCallEdge"
+import { FunctionCallInputNode } from "../useFunctionCallEdge"
+import { FunctionCallChainBaseInputNode } from "../../FunctionCallChain"
+import { FunctionIndex } from "../../../../apis/FunctionIndex"
 
 
-export const generateArgumentsBranch = (openai: OpenAIApi) => async (
+export const generateArgumentsBranch = async (
     input: NodeValue<FunctionCallChainBaseInputNode>,
     openai: OpenAIApi
 ): Promise<NodeValue<FunctionCallInputNode>> => {

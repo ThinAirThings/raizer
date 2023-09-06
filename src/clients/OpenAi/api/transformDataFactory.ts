@@ -1,7 +1,7 @@
 import { AirNode, NodeValue } from "@thinairthings/react-nodegraph";
 import { jsonStructureFromFunction } from "@thinairthings/ts-ai-api";
 import { OpenAIApi } from "openai";
-import { useFunctionLoaderEdge } from "../../../components/FunctionCallChain/edges/useFunctionLoaderEdge";
+import { useFunctionLoaderEdge } from "../../../components/FunctionCallChain/edges/functionLoader/useFunctionLoaderEdge";
 import { useFunctionCallEdge } from "../../../components/FunctionCallChain/edges/useFunctionCallEdge";
 
 

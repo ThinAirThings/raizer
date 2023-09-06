@@ -2,7 +2,6 @@ import { useContext, useMemo } from "react"
 import { callFunctionFactory } from "./api/callFunctionFactory"
 import { OpenaiContext } from "./OpenAiProvider"
 import { transformDataFactory } from "./api/transformDataFactory"
-import { generateArgumentsFactory } from "./api/generateArgumentsFactory"
 
 
 export const useOpenai = () => {

@@ -1,27 +1,37 @@
-import { useFunctionCallEdge } from "./edges/useFunctionCallEdge";
-import { CompositeAirNode } from "@thinairthings/react-nodegraph";
-import { useFunctionLoaderEdge } from "./edges/useFunctionLoaderEdge";
+import { FunctionCallOutputNode, useFunctionCallEdge } from "./edges/useFunctionCallEdge";
+import { AirNode, SubtypeAdjacencyAirNode } from "@thinairthings/react-nodegraph";
+import { useFunctionLoaderEdge } from "./edges/functionLoader/useFunctionLoaderEdge";
 import { DecisionChain } from "../DecisionChain/DecisionChain";
 import { FunctionIndex } from "../../apis/FunctionIndex";
-import { AiNodeUnion } from "../AiNodeUnion";
+import { FC } from "react";
 
+export type FunctionCallChainBaseInputNode = AirNode<{
+    reasoning: string
+    functionKey: keyof typeof FunctionIndex
+}, 'FunctionCallChainInputNode'>
+
+export type FunctionCallChainSubtypeAdjacencySet =
+    | FunctionCallOutputNode
+
+export type FunctionCallChainSubtypeAdjacencyInputNode = SubtypeAdjacencyAirNode<
+    FunctionCallChainBaseInputNode,
+    FunctionCallChainSubtypeAdjacencySet
+> 
 export const FunctionCallChain = ({
-    functionCallChainInputNode
+    input
 }: {
-    functionCallChainInputNode: CompositeAirNode<{
-        initialPrompt: string
-        t1Reasoning: string
-        functionKey: keyof typeof FunctionIndex
-    },'functionChainInput', AiNodeUnion, ('functionResult'|'root')> 
-}) => {
-
+    input: FunctionCallChainSubtypeAdjacencyInputNode
+}): FC<{
+    input: FunctionCallOutputNode
+}> => {
     // Function Loader
-    const [functionCallInputNode] = useFunctionLoaderEdge(functionCallChainInputNode)
-    // const 
-    const [functionResultNode] = useFunctionCallEdge(functionCallInputNode)
+    const functionCallInputNode = useFunctionLoaderEdge(input)
+    // Call Function
+    const functionCallOutputNode = useFunctionCallEdge(functionCallInputNode)
+
     // Handle what to do next
     return <>
-        <DecisionChain decisionChainInput={functionResultNode} />
+        <DecisionChain input={functionCallOutputNode} />
     </>
 }
 
