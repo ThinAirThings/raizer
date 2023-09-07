@@ -11,192 +11,85 @@ import { LiveblocksNodeRoomProvider } from "@thinairthings/liveblocks-model";
 import { createContext } from "react";
 import { Configuration, OpenAIApi } from "openai";
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
-import { useNode } from "@thinairthings/react-nodegraph";
+import { useEdge } from "@thinairthings/react-nodegraph";
 import { Fragment, jsx } from "react/jsx-runtime";
 var secretsClient = new SecretsManagerClient({ region: "us-east-1" });
 var OpenaiContext = createContext(null);
 var OpenaiProvider = ({ children }) => {
-  const [openaiToken] = useNode(async () => {
+  const [tokenNode] = useEdge(async () => {
     return (await secretsClient.send(
       new GetSecretValueCommand({
         SecretId: "OPENAI_API_KEY_DEV"
       })
     )).SecretString;
   }, []);
-  const [openaiClient] = useNode(async ([token]) => {
+  const [clientNode] = useEdge(async ([token]) => {
     return new OpenAIApi(new Configuration({
       apiKey: token
     }));
-  }, [openaiToken]);
-  if (openaiClient.type !== "success")
+  }, [tokenNode]);
+  if (clientNode.state !== "success")
     return null;
-  return /* @__PURE__ */ jsx(Fragment, { children: /* @__PURE__ */ jsx(OpenaiContext.Provider, { value: openaiClient.next, children }) });
+  return /* @__PURE__ */ jsx(Fragment, { children: /* @__PURE__ */ jsx(OpenaiContext.Provider, { value: clientNode.value, children }) });
 };
+
+// src/components/Resolution/Resolution.tsx
+import { useEdge as useEdge2 } from "@thinairthings/react-nodegraph";
 
 // src/clients/OpenAi/useOpenai.ts
-import { useContext as useContext2, useMemo as useMemo2 } from "react";
-
-// src/clients/OpenAi/api/callFunctionFactory.ts
-import { jsonStructureFromFunction } from "@thinairthings/ts-ai-api";
-var callFunctionFactory = (openaiClient) => async ({
-  context,
-  fn
-}) => {
-  const jsonStructure = await jsonStructureFromFunction(fn);
-  const chatResponse = await openaiClient.createChatCompletion({
-    model: "gpt-4",
-    messages: [{
-      role: "system",
-      content: `Generate a structured JSON string as arguments based on the provided user input, ensuring it aligns with the parameters specified by the function_calling parameters specification. 
-            The output should be a valid and relevant argument structure for the intended function.
-            `
-    }, {
-      role: "user",
-      content: context
-    }],
-    functions: [{
-      name: jsonStructure.name,
-      description: jsonStructure.description,
-      parameters: jsonStructure.input
-    }],
-    function_call: {
-      name: jsonStructure.name
-    }
-  });
-  if (!chatResponse.data.choices[0].message?.function_call || !chatResponse.data.choices[0].message?.function_call?.arguments) {
-    throw new Error("Model did not find a relevant function to call");
-  }
-  const functionCallString = chatResponse.data.choices[0].message.function_call;
-  return await fn(JSON.parse(functionCallString.arguments));
-};
-
-// src/clients/OpenAi/api/transformDataFactory.ts
-import { jsonStructureFromFunction as jsonStructureFromFunction2 } from "@thinairthings/ts-ai-api";
-var transformDataFactory = (openaiClient) => async ({
-  prompt,
-  fn1,
-  fn2
-}) => {
-  console.log("Here");
-  const jsonStructureFn1 = await jsonStructureFromFunction2(fn1);
-  const jsonStructureFn2 = await jsonStructureFromFunction2(fn2);
-  const chatResponse = await openaiClient.createChatCompletion({
-    model: "gpt-4",
-    messages: [{
-      role: "system",
-      content: `
-                Generate a string of valid JavaScript function body code that transforms the output of the first function into the input of the second function and returns the data in the form of the input of the second function.
-                Your output should look like this: {javascriptFunctionBodyCode: "return { {{transformationCode}} }"}, not like this {javascriptFunctionBodyCode: "\\n { return {{transformationCode}} }"}.
-                In other words, the string should not have a newline character at the beginning.
-                The output should be a string which can be passed as the input to a JavaScript Function constructor.
-
-                Example Output: "return { 
-                    chartTitle: 'Nvidia closing prices', 
-                    xLabel: 'Time', 
-                    yLabel: 'Price', 
-                    data: data.results.map(item => ({ x: item.t, y: item.c })) 
-                };"
-            `
-    }, {
-      role: "user",
-      content: `
-                First Function Output: ${JSON.stringify(jsonStructureFn1.output)}.
-                Second Function Input: ${JSON.stringify(jsonStructureFn2.input)}.
-                Use this prompt as context for your transform: ${prompt}
-            `
-    }],
-    functions: [{
-      name: "transformDataFunctionBody",
-      description: "Transforms the output of the first function into the input of the second function",
-      parameters: {
-        type: "object",
-        properties: {
-          javascriptFunctionBodyCode: {
-            type: "string",
-            description: "The function body code which will be used to transform the data"
-          }
-        },
-        required: ["javascriptFunctionBodyCode"]
-      }
-    }],
-    function_call: {
-      name: "transformDataFunctionBody"
-    }
-  });
-  if (!chatResponse.data.choices[0].message?.function_call || !chatResponse.data.choices[0].message?.function_call?.arguments) {
-    console.log("HERERE");
-    throw new Error("Model did not find a relevant function to call");
-  }
-  const functionCallString = chatResponse.data.choices[0].message.function_call;
-  return await JSON.parse(functionCallString.arguments);
-};
-
-// src/clients/OpenAi/useOpenai.ts
+import { useContext as useContext2 } from "react";
 var useOpenai = () => {
   const openaiClient = useContext2(OpenaiContext);
-  return useMemo2(() => {
-    return {
-      callFunction: callFunctionFactory(openaiClient),
-      transformData: transformDataFactory(openaiClient)
-    };
-  }, [openaiClient]);
+  return openaiClient;
 };
 
-// src/components/ProcessChain/ProcessChain.tsx
-import { useNode as useNode2 } from "@thinairthings/react-nodegraph";
-
-// src/apis/Stocks/getStockData/getStockData.ts
-import { restClient } from "@polygon.io/client-js";
-import { GetSecretValueCommand as GetSecretValueCommand2, SecretsManagerClient as SecretsManagerClient2 } from "@aws-sdk/client-secrets-manager";
-var secretsClient2 = new SecretsManagerClient2({ region: "us-east-1" });
-var polygonClient = restClient((await secretsClient2.send(new GetSecretValueCommand2({
-  SecretId: "POLYGON_API_KEY_DEV"
-}))).SecretString);
-var getStockData = async (input) => {
-  return polygonClient.stocks.aggregates(
-    input.stocksTicker,
-    input.multiplier,
-    input.timespan,
-    input.from,
-    input.to
-  );
-};
-
-// src/apis/Charts/createSimpleLineChart/createSimpleLineChart.ts
-var createSimpleLineChart = async (input) => {
-  return {
-    stuff: "stuff"
-  };
-};
-
-// src/components/ProcessChain/ProcessChain.tsx
+// src/components/Resolution/Resolution.tsx
+import { jsonStructureFromAirNode, jsonStructureFromNodeIndex } from "@thinairthings/ts-ai-api";
 import { Fragment as Fragment2, jsx as jsx2 } from "react/jsx-runtime";
-var ProcessChain = ({
-  prompt
-}) => {
-  const openAiClient = useOpenai();
-  const [NextNode] = useNode2(async () => {
-    const stockData = await openAiClient.callFunction({
-      context: "Show me data for Nvidia",
-      fn: getStockData
+var Resolution = ({ input }) => {
+  const openai = useOpenai();
+  const [GoalNodes] = useEdge2(async ([{ initialPrompt }]) => {
+    const outputNodeJson = jsonStructureFromAirNode("ResolutionOutputNode");
+    const goalIndexJson = jsonStructureFromNodeIndex("GoalNodeIndex");
+    console.log(JSON.stringify(goalIndexJson, null, 4));
+    console.log(`${Object.entries(jsonStructureFromNodeIndex("GoalNodeIndex").index).map(([key, value]) => {
+      return `${key}: ${value.description}`;
+    }).join("\n")}`);
+    const chatResponse = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [{
+        role: "system",
+        content: `You're an ai which generates a set of goals based on a predetermined set of possible goals.
+                Your task is to interpret the user prompt and define 1-5 goals to be achieved.
+                The set of goals you may choose from are defined as follows:
+                ${Object.entries(jsonStructureFromNodeIndex("GoalNodeIndex").index).map(([key, value]) => {
+          return `${key}: ${value.description}`;
+        }).join("\n")}
+                `
+      }, {
+        role: "user",
+        content: initialPrompt
+      }],
+      functions: [{
+        name: outputNodeJson.name,
+        description: outputNodeJson.description,
+        parameters: outputNodeJson.structure
+      }]
     });
-    console.log(stockData);
-    const transformCode = await openAiClient.transformData({
-      prompt,
-      fn1: getStockData,
-      fn2: createSimpleLineChart
-    });
-    console.log(transformCode.javascriptFunctionBodyCode);
-    const dataTransformFunction = new Function("data", transformCode.javascriptFunctionBodyCode);
-    const result = dataTransformFunction(stockData);
-    console.log(result);
-    return 5;
-  }, [], {
-    pending: () => console.log("Running Transform Data"),
-    failure: {
-      maxRetryCount: 3,
-      retry: (error, { runRetry }) => runRetry(),
-      final: (err) => console.log("Error Transforming Data", JSON.stringify(err))
+    if (!chatResponse.data.choices[0].message?.function_call || !chatResponse.data.choices[0].message?.function_call?.arguments) {
+      console.log("HERE!!!");
+      throw new Error("Model did not find a relevant function to call");
+    }
+    const functionCallString = chatResponse.data.choices[0].message.function_call;
+    const functionCallArguments = chatResponse.data.choices[0].message.function_call.arguments;
+    console.log(functionCallString, functionCallArguments);
+  }, [input], {
+    lifecycleHandlers: {
+      pending: () => console.log("Trying Resolution Node"),
+      success: () => console.log("Resolution Node Success"),
+      failure: {
+        final: (error) => console.log("Resolution Node Error", JSON.stringify(error, null, 4))
+      }
     }
   });
   return /* @__PURE__ */ jsx2(Fragment2, {});
@@ -215,7 +108,13 @@ var RootAi = ({
       userId,
       spaceId,
       serverName: `aiNode-${userId}-${spaceId}`,
-      children: () => /* @__PURE__ */ jsx3(ProcessChain, { prompt: rawInput })
+      children: () => /* @__PURE__ */ jsx3(Resolution, { input: {
+        type: "ResolutionInputNode",
+        state: "success",
+        value: {
+          initialPrompt: rawInput
+        }
+      } })
     }
   ) }) });
 };

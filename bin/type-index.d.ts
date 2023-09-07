@@ -1,5 +1,8 @@
+import { AirNode, NodeValue } from '@thinairthings/react-nodegraph';
+import { FC } from 'react';
+
 /** This function retrieves stock data from the Polygon.io API*/
-declare const getStockData: (input: {
+declare const getStocksData: (input: {
     /**The ticker symbol of the stock/equity. Examples: APPL, ABT, MMM, ACN, ADBE*/
     stocksTicker: string;
     /**The size of the timespan multiplier.*/
@@ -133,57 +136,32 @@ declare const createSimpleLineChart: (input: {
     stuff: string;
 }>;
 
-export { createSimpleLineChart, getOptionsData, getStockData };
+/** The goal of creating a simple line chart to visualize data. */
+type SimpleLineChartGoalNode = AirNode<{
+    /** Reasoning as to why a line chart was chosen as a target goal for the input prompt. */
+    reasoning: string;
+}, 'SimpleLineChartGoalNode'>;
 
-export type getStockData_Input = { /** */
-    /**
-     * The ticker symbol of the stock/equity. Examples: APPL, ABT, MMM, ACN, ADBE
-     */
-    stocksTicker: string; /** */
-    /**
-     * The size of the timespan multiplier.
-     */
-    multiplier: number; timespan: "second" | "minute" | "hour" | "day" | "week" | "month" | "quarter" | "year"; /** */
-    /**
-     * The start of the aggregate time window. Either a date with the format YYYY-MM-DD or a millisecond timestamp.
-     */
-    from: `${number}-${number}-${number}`; /** */
-    /**
-     * The end of the aggregate time window. Either a date with the format YYYY-MM-DD or a millisecond timestamp.
-     */
-    to: `${number}-${number}-${number}`; /** */
-    /**
-     * Limits the number of base aggregates queried to create the aggregate results. Max 50000 and Default 5000.
-     */
-    limit?: number; };
-export type getStockData_Output = Promise<{ ticker: string; adjusted: boolean; queryCount: number; request_id: string; resultsCount: number; status: string; results?: { c: number; h: number; l: number; n: number; o: number; otc: boolean; t: number; v: number; vw: number; }[]; next_url?: string; }>;
-export type createSimpleLineChart_Input = { /** */
-    /**
-     * Title of Chart
-     */
-    chartTitle: string; /** */
-    /**
-     * X-Axis Label
-     */
-    xLabel: string; /** */
-    /**
-     * Y-Axis Label
-     */
-    yLabel: string; /** */
-    /**
-     * X-data
-     */
-    /** */
-    /**
-     * Y-data
-     */
-    data: { /** */
-        /**
-         * X-data
-         */
-        x: number; /** */
-        /**
-         * Y-data
-         */
-        y: number; }[]; };
-export type createSimpleLineChart_Output = Promise<{ stuff: string; }>;
+/** The set of possible goals. */
+type GoalNodeIndex = {
+    /** The goal of creating a simple line chart to visualize data. */
+    'SimpleLineChartGoalNode': NodeValue<SimpleLineChartGoalNode>;
+};
+type ResolutionInputNode = AirNode<{
+    initialPrompt: string;
+}, 'ResolutionInputNode'>;
+/** The input to the system which will take an array of goals and begin trying to achieve them. */
+type ResolutionOutputNode = AirNode<{
+    /** An array of goals */
+    goals: Array<{
+        /** The name of the goal. */
+        goal: keyof GoalNodeIndex;
+        /** The reasoning behind choosing this goal. */
+        reasoning: string;
+    }>;
+}, 'ResolutionOutputNode'>;
+declare const Resolution: FC<{
+    input: ResolutionInputNode;
+}>;
+
+export { GoalNodeIndex, Resolution, ResolutionInputNode, ResolutionOutputNode, createSimpleLineChart, getOptionsData, getStocksData };

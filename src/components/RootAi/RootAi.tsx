@@ -2,7 +2,7 @@ import { FC } from "react";
 import { LiveblocksNodeRoomProvider } from "@thinairthings/liveblocks-model";
 import { OpenaiProvider } from "../../clients/OpenAi/OpenAiProvider";
 import { AirNode } from "@thinairthings/react-nodegraph";
-import { DecisionChain } from "../DecisionChain/DecisionChain";
+import { Resolution } from "../Resolution/Resolution";
 
 
 export type RootNode = AirNode<{
@@ -25,8 +25,8 @@ export const RootAi: FC<{
                 spaceId={spaceId}
                 serverName={`aiNode-${userId}-${spaceId}`}
             >
-                {() => <DecisionChain input={{
-                    type: 'DecisionChainInputNode',
+                {() => <Resolution input={{
+                    type: 'ResolutionInputNode',
                     state: 'success',
                     value: {
                         initialPrompt: rawInput
