@@ -10,7 +10,7 @@ import { ToolSelectionOutputNode, useToolSelection } from "./edges/useToolSelect
 export const AchieveGoal: FC<{
     input: GoalInputNode,
     goalResolver: ReturnType<typeof useNodeResolver>[0]
-}> = ({input}) => {
+}> = ({input, goalResolver}) => {
     const openai = useOpenai()
     // Previous Executions
     const previousExecutions = useRef<Array<NodeValue<ToolSelectionOutputNode>>>([])
@@ -26,7 +26,7 @@ export const AchieveGoal: FC<{
         triggerNewToolResolver
     ] = useNodeResolver()
     // Check if we've acquired enough data to achieve the goal.
-    const [GoalCompleteNode] = useEdge(async ([input, toolExecutionResolverNode, toolSelectionValue]) => {
+    const [GoalCompleteNode] = useEdge(async ([input, toolExecutionResolverValue, toolSelectionValue]) => {
         const goalCheckOutput = await openai.createChatCompletion({
             model: 'gpt-4',
             messages: [{
@@ -41,7 +41,7 @@ export const AchieveGoal: FC<{
                 role: 'user',
                 content: `The structure you have received is: ${JSON.stringify(
                     jsonStructureFromAirNode(
-                        toolSelectionValue.toolKey.replace(/Node$/, 'InputNode') as NodeTypeString
+                        toolSelectionValue.toolKey.replace(/Node$/, 'OutputNode') as NodeTypeString
                     )
                 )}`
             }],
@@ -63,7 +63,8 @@ export const AchieveGoal: FC<{
             goalIsComplete: boolean
         }
         if (checkForCompletionOutput.goalIsComplete) {
-            console.log("Transform and resolve")
+            // This is where you use the toolExecutionResolverNode to resolve the goal.
+            return toolExecutionResolverValue
         } else {
             previousExecutions.current.push(toolSelectionValue)
             triggerToolSelection()
@@ -71,6 +72,61 @@ export const AchieveGoal: FC<{
         }
     }, [input, toolExecutionResolverNode, toolSelectionOutputNode] as const)
 
+    // Handle Goal complete and transformation
+    useEdge(async ([goalInputValue, goalCompleteValue, toolSelectionOutputValue]) => {
+        const inputStructure = jsonStructureFromAirNode(
+            toolSelectionOutputValue.toolKey.replace(/Node$/, 'OutputNode') as NodeTypeString
+        )
+        const outputStructure = goalInputValue.goalStructure
+        const transformationCodeResponse = await openai.createChatCompletion({
+            model: 'gpt-4',
+            messages: [{
+                role: 'system',
+                content: `
+                    Generate a string of valid JavaScript function body code that transforms the output of the first function into the input of the second function and returns the data in the form of the input of the second function.
+                    Your output should look like this: {javascriptFunctionBodyCode: "return { {{transformationCode}} }"}, not like this {javascriptFunctionBodyCode: "\\n { return {{transformationCode}} }"}.
+                    In other words, the string should not have a newline character at the beginning.
+                    The output should be a string which can be passed as the input to a JavaScript Function constructor.
+
+                    Example Output: "return { 
+                        chartTitle: 'Nvidia closing prices', 
+                        xLabel: 'Time', 
+                        yLabel: 'Price', 
+                        data: data.results.map(item => ({ x: item.t, y: item.c })) 
+                    };"
+                `
+            }, {
+                role: 'user',
+                content: `
+                The input structure is: ${JSON.stringify(inputStructure)}.
+                The output structure is: ${JSON.stringify(outputStructure)}.
+                Perform the transform based on this information:
+                The initial prompt: ${JSON.stringify(goalInputValue.initialPrompt)}
+                The reasoning beging the goal: ${JSON.stringify(goalInputValue.reasoning)}
+                `
+            }],
+            ...openaiReturnType({
+                name: 'transformationFunctionBodyCode',
+                description: 'The body of a JavaScript function which transforms the input structure into the output structure.',
+                parameters: {
+                    transformationFunctionBodyCode: {
+                        type: 'string',
+                        description: 'The body of a JavaScript function which transforms the input structure into the output structure.'
+                    }
+                }
+            })
+        })
+        if (!transformationCodeResponse.data.choices[0].message?.function_call?.arguments) {
+            throw new Error("Model did not find a relevant function to call")
+        }
+        const codeString = (JSON.parse(transformationCodeResponse.data.choices[0].message.function_call.arguments) as {
+            transformationFunctionBodyCode: string
+        }).transformationFunctionBodyCode
+        const transformationFunction = new Function('data', codeString)
+        const transformedData = transformationFunction(goalCompleteValue)
+        // Resolve Goal
+        goalResolver.success(transformedData)
+    }, [input, GoalCompleteNode, toolSelectionOutputNode] as const)
     return <>
         {/* {ToolNode.state === 'success' && <ToolNode.value/>} */}
     </>
