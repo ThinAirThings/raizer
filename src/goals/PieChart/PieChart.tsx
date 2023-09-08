@@ -3,35 +3,29 @@ import { AirNode, useEdge } from "@thinairthings/react-nodegraph"
 
 
 /** The success case of this goal being acheieved. */
-export type SimpleLineChartGoalNode = AirNode<{
+export type PieChartGoalNode = AirNode<{
     /** Title of Chart */ 
     chartTitle: string
-    /** X-Axis Label */
-    xLabel: string
-    /** Y-Axis Label */
-    yLabel: string
-    /** Data to be plotted */
+    /** Pie Chart Data */
     data: Array<{
-        /** X-data*/
-        x: number
-        /** Y-data */
-        y: number
+        /** Name of section in pie chart*/
+        name: string
+        /** Percentage value this section represents of the whole pie chart */
+        percentage: number
     }>
-}, 'SimpleLineChartGoalNode'>
+}, 'PieChartGoalNode'>
 
-export const SimpleLineChartGoalExecution = ({
+export const PieChartGoalExecution = ({
     input
 }: {
-    input: SimpleLineChartGoalNode
+    input: PieChartGoalNode
 }) => {
     const createUiNode = useMutationCreateNode(useMutation)
-    useEdge(async ([{chartTitle, xLabel, yLabel, data}]) => {
+    useEdge(async ([{chartTitle, data}]) => {
         createUiNode({
-            key: 'SimpleLineChart',
+            key: 'PieChart',
             state: {
                 chartTitle,
-                xLabel,
-                yLabel,
                 data,
                 containerState: {
                     width: 500,

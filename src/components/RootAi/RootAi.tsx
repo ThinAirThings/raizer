@@ -1,8 +1,9 @@
 import { FC } from "react";
 import { LiveblocksNodeRoomProvider } from "@thinairthings/liveblocks-model";
 import { OpenaiProvider } from "../../clients/OpenAi/OpenAiProvider";
-import { AirNode } from "@thinairthings/react-nodegraph";
+import { AirNode, nodeFromValue } from "@thinairthings/react-nodegraph";
 import { Resolution } from "../Resolution/Resolution";
+import { PolygonProvider } from "../../clients/Polygon/PolygonProvider";
 
 
 export type RootNode = AirNode<{
@@ -20,19 +21,18 @@ export const RootAi: FC<{
 }) => {
     return <>
         <OpenaiProvider>
+        <PolygonProvider>
             <LiveblocksNodeRoomProvider
                 userId={userId}
                 spaceId={spaceId}
                 serverName={`aiNode-${userId}-${spaceId}`}
             >
-                {() => <Resolution input={{
-                    type: 'ResolutionInputNode',
-                    state: 'success',
-                    value: {
-                        initialPrompt: rawInput
-                    }
-                }} />}
+                {() => <Resolution input={nodeFromValue({
+                            initialPrompt: rawInput
+                        }, 'ResolutionInputNode')} 
+                />}
             </LiveblocksNodeRoomProvider>
+        </PolygonProvider>
         </OpenaiProvider>
     </>
 }

@@ -3,7 +3,6 @@ import { createServer } from 'http'
 import { SocketioServer } from '@thinairthings/websocket-server'
 import { enableMapSet } from 'immer'
 import { RootAi } from './components/RootAi/RootAi'
-import { jsonStructureFromAirNode } from '@thinairthings/ts-ai-api'
 
 enableMapSet()
 const httpServer = createServer()
@@ -12,7 +11,7 @@ render (
     <RootAi
         userId="777"
         spaceId="777"
-        rawInput='Show me daily data for Apple opening prices from April 2023 - July 2023.'
+        rawInput='I want to see the options data for Nvidia at a strike price of $550 leading up to their earnings call which happened on August 23rd 2023.'
     />
 )
 

@@ -1,15 +1,9 @@
-import { AirNode, NodeValue, useEdge } from "@thinairthings/react-nodegraph"
+import { AirNode, NodeValue, nodeFromValue, useEdge } from "@thinairthings/react-nodegraph"
 import { FC } from "react"
 import { useOpenai } from "../../clients/OpenAi/useOpenai"
-import { SimpleLineChartGoalNode } from "../../goals/SimpleLineChart/SimpleLineChart"
 import { jsonStructureFromAirNode, jsonStructureFromNodeIndex } from "@thinairthings/ts-ai-api"
-
-
-/** The set of possible goals. */
-export type GoalNodeIndex = {
-    /** The goal of creating a simple line chart to visualize data. */
-    'SimpleLineChartGoalNode': NodeValue<SimpleLineChartGoalNode>
-}
+import { Goal } from "../../goals/Goal/Goal"
+import { GoalNodeIndex } from "../../goals/GoalIndex"
 
 export type ResolutionInputNode = AirNode<{
     initialPrompt: string
@@ -20,7 +14,7 @@ export type ResolutionOutputNode = AirNode<{
     /** An array of goals */
     goals: Array<{
         /** The name of the goal. */
-        goal: keyof GoalNodeIndex,
+        goalKey: keyof GoalNodeIndex,
         /** The reasoning behind choosing this goal. */
         reasoning: string
     }>
@@ -33,12 +27,7 @@ export const Resolution: FC<{
     // Define Goals
     const [GoalNodes] = useEdge(async ([{initialPrompt}]) => {
         const outputNodeJson = jsonStructureFromAirNode('ResolutionOutputNode')
-        // console.log(outputNodeJson)
         const goalIndexJson = jsonStructureFromNodeIndex('GoalNodeIndex')
-        console.log(JSON.stringify(goalIndexJson, null, 4))
-        console.log(`${Object.entries(jsonStructureFromNodeIndex('GoalNodeIndex').index).map(([key, value]) => {
-            return `${key}: ${value.description}`
-        }).join('\n')}`)
         const chatResponse = await openai.createChatCompletion({
             model: 'gpt-4',
             messages: [{
@@ -46,7 +35,7 @@ export const Resolution: FC<{
                 content: `You're an ai which generates a set of goals based on a predetermined set of possible goals.
                 Your task is to interpret the user prompt and define 1-5 goals to be achieved.
                 The set of goals you may choose from are defined as follows:
-                ${Object.entries(jsonStructureFromNodeIndex('GoalNodeIndex').index).map(([key, value]) => {
+                ${Object.entries(goalIndexJson.index).map(([key, value]) => {
                     return `${key}: ${value.description}`
                 }).join('\n')}
                 `
@@ -58,25 +47,44 @@ export const Resolution: FC<{
                 name: outputNodeJson.name,
                 description: outputNodeJson.description,
                 parameters: outputNodeJson.structure
-            }]
+            }],
+            function_call: {
+                name: outputNodeJson.name,
+            } 
         })
-        if (!chatResponse.data.choices[0].message?.function_call || 
-            !chatResponse.data.choices[0].message?.function_call?.arguments) {
-                console.log("HERE!!!")
+        if (!chatResponse.data.choices[0].message?.function_call?.arguments) {
             throw new Error("Model did not find a relevant function to call")
         }
-        const functionCallString = chatResponse.data.choices[0].message.function_call
         const functionCallArguments = chatResponse.data.choices[0].message.function_call.arguments
-        console.log(functionCallString, functionCallArguments)
+        const resolutionOutput = JSON.parse(functionCallArguments) as NodeValue<ResolutionOutputNode>
+        return resolutionOutput.goals.map(({goalKey, reasoning}) => {
+            return {
+                initialPrompt,
+                goalKey,
+                reasoning,
+                goalStructure: goalIndexJson.index[goalKey].structure
+            }
+        })
     }, [input], {
         lifecycleHandlers: {
             pending: () => console.log("Trying Resolution Node"),
-            success: () => console.log("Resolution Node Success"),
+            success: (output) => {
+                console.log("Resolution Node Success")
+                console.log(JSON.stringify(output, null, 4))
+            },
             failure: {
                 final: (error: any) => console.log("Resolution Node Error", JSON.stringify(error, null, 4)),
             }
         }
     })
 
-    return <></>
+    if (GoalNodes.state !== 'success') return null
+    return <>
+        {GoalNodes.value.map((goalInputValue) => {
+            return <Goal
+                key={goalInputValue.reasoning}
+                input={nodeFromValue(goalInputValue, 'GoalInputNode')}
+            />
+        })}
+    </>
 }
